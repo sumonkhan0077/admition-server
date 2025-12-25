@@ -80,6 +80,57 @@ app.get("/universities/filter", async (req, res) => {
   }
 });
 
+// POST route to save application
+app.post("/applications", async (req, res) => {
+  try {
+    const {
+      university_id,
+      university_name,
+      full_name,
+      email,
+      phone,
+      country,
+      gpa,
+      ielts,
+      message,
+    } = req.body;
+
+    // Basic validation
+    if (!university_id || !university_name || !full_name || !email) {
+      return res.status(400).json({ error: "Required fields missing" });
+    }
+
+    const query = `
+      INSERT INTO applications 
+      (university_id, university_name, full_name, email, phone, country, gpa, ielts, message)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const params = [
+      university_id,
+      university_name,
+      full_name,
+      email,
+      phone || null,
+      country || null,
+      gpa ? Number(gpa) : null,
+      ielts ? Number(ielts) : null,
+      message || null,
+    ];
+
+    const [result] = await pool.execute(query, params);
+
+    res.status(201).json({
+      success: true,
+      message: "Application submitted successfully!",
+      application_id: result.insertId,
+    });
+  } catch (err) {
+    console.error("Error saving application:", err);
+    res.status(500).json({ error: "Failed to save application" });
+  }
+});
+
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });
